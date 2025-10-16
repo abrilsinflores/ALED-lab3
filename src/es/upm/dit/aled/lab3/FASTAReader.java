@@ -21,7 +21,7 @@ import java.util.List;
 public class FASTAReader {
 
 	protected byte[] content;
-	protected int validBytes;
+	protected int validBytes; //num of Bytes valid in the content
 
 	/**
 	 * Creates a new FASTAReader from a FASTA file.
@@ -47,7 +47,12 @@ public class FASTAReader {
 		File f = new File(fileName);
 		FileInputStream fis = new FileInputStream(f);
 		DataInput fid = new DataInputStream(fis);
-		long len = (int) fis.getChannel().size();
+		// devuelve un filechannel vinculado al archivo del fileinputstream
+		//el canal permite hacer lecturas más eficientes por medio d buffers
+		//el size() del channel es el nº total d Bytes del archivo
+		//el channel es un puntero, no guarda datos, su method position devuelve
+		//dónde está colocado el canal en el archivo, avanza a medida q leemos
+		long len = (int) fis.getChannel().size();  
 		if (len > Integer.MAX_VALUE) {
 			fis.close();
 			throw new IOException("The file " + fileName + " is too big. Can't be contained in an array.");
@@ -55,7 +60,7 @@ public class FASTAReader {
 		byte[] content = new byte[(int) len];
 		int bytesRead = 0;
 		int numRead = 0;
-		String line;
+		String line; 
 		while ((line = fid.readLine()) != null) {
 			// Put every character in upper case
 			line = line.toUpperCase();
@@ -190,7 +195,9 @@ public class FASTAReader {
 			return;
 		System.out.println("Tiempo de apertura de fichero: " + (System.nanoTime() - t1));
 		long t2 = System.nanoTime();
-		List<Integer> posiciones = reader.search(args[1].getBytes());
+		List<Integer> posiciones = reader.search(args[1].getBytes()); 
+		//FASTA usa 1 Byte x letra, en el string la secuencia está escrita en caracteres, 
+		//por eso la pasamos a bytes, q es la coincidencia q busca el método search
 		System.out.println("Tiempo de búsqueda: " + (System.nanoTime() - t2));
 		if (posiciones.size() > 0) {
 			for (Integer pos : posiciones)
