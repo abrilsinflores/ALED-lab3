@@ -1,5 +1,6 @@
 package es.upm.dit.aled.lab3.binary;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,7 +20,7 @@ import es.upm.dit.aled.lab3.FASTAReader;
  * @author mmiguel, rgarciacarmona
  *
  */
-public class FASTAReaderSuffixes extends FASTAReader {
+public class FASTAReaderSuffixes extends FASTAReader { // tiene tous argumentos FASTAReader + array sufijos
 	protected Suffix[] suffixes;
 
 	/**
@@ -35,14 +36,14 @@ public class FASTAReaderSuffixes extends FASTAReader {
 		super(fileName);
 		this.suffixes = new Suffix[validBytes];
 		for (int i = 0; i < validBytes; i++)
-			suffixes[i] = new Suffix(i);
+			suffixes[i] = new Suffix(i); // crea tantos sufijos como Bytes tenga el archivo
 		// Sorts the data
 		sort();
 	}
 
 	/*
-	 * Helper method that creates a array of integers that contains the positions of
-	 * all suffixes, sorted alphabetically by the suffix.
+	 * Helper method that creates an array of integers that contains the positions
+	 * of all suffixes, sorted alphabetically by the suffix.
 	 */
 	private void sort() {
 		// Instantiate the external SuffixComparator, passing 'this' (the reader)
@@ -77,9 +78,52 @@ public class FASTAReaderSuffixes extends FASTAReader {
 	 *         pattern in the data.
 	 */
 	@Override
-	public List<Integer> search(byte[] pattern) {
-		// TODO
-		return null;
+	public List<Integer> search(byte[] pattern) { // TODO
+
+		List<Integer> listOfConcurrences = new ArrayList<Integer>();
+		// límites de la búsqueda binaria
+		int lo = 0;
+		int hi = this.suffixes.length - 1; // mayor posicc (-1 xq si mide 8 tengo hasta la posicc 7!!!)
+		boolean found = false;
+		int index = 0; // rastrea el caracter actual con el pattern
+
+		while ((!found) && !(hi - lo <= 1)) {
+			int m = (int) Math.floor(lo + (hi - lo) / 2); // cálculo punto medio intervalo
+			int posSuffix = suffixes[m].suffixIndex; // posición del suffix ( q está en la posicc m del array the
+														// suffixs)en el FASTA file
+			// comparacc de cada carácter con el pattern mientras que:
+			// 1) el índice no supere el tamaño del patrón
+			// 2) los bytes del suffix q miremos no se salgan del archivo
+			// 3) los bytes del suffix y el archivo coincidan
+			while ((index < pattern.length) && (posSuffix + index < content.length)
+					&& (pattern[index] == content[posSuffix + index])) {
+				index++; // aumentamos el índice
+			}
+
+			// añadimos la posición del sufijo a la lista SOLAMENTE si
+			// coinciden el nm d bytes del suffix iguales al del pattern
+			// y si NO HAY MÁS LETRAS DETRÁS
+			if ((index == pattern.length) && (posSuffix + index == content.length)) {
+				listOfConcurrences.add(posSuffix);
+				found = true;
+			}
+			// si el suffix no coincide, MODIFICAMOS LÍMITES INTERVALOS
+			// si la letra del sufijo es MAYOR q la del pattern, CONCIDICIONES:
+			// 1) q el índice sea igual d largo (xq entonces se ha encontrado un patrón pero
+			// DESPUÉS HAY MÁS LETRAS)
+			// OOOOO 2) q la sig letra del sufijo sea MAYOR q la del patrón
+			// OJO:can comparar letras porq es código ASCII, está ya ordenado alfabéticamm
+			// según Byte que es
+			else if ((index == pattern.length) || (pattern[index] < content[posSuffix + index])) {
+				hi = m--;
+				index = 0;
+			} else {
+				lo = m++;
+				index = 0;
+			}
+		}
+
+		return listOfConcurrences;
 	}
 
 	public static void main(String[] args) {

@@ -36,7 +36,7 @@ public class SuffixComparator implements Comparator<Suffix> {
 	public int compare(Suffix s1, Suffix s2) {
 		int index1 = s1.suffixIndex;
 		int index2 = s2.suffixIndex;
-
+		//cuál es el mínimo entre la cantidad de Bytes a leer hasta el índice d los sufijos dados
 		int len = Math.min(this.reader.getValidBytes() - index1, this.reader.getValidBytes() - index2);
 
 		for (int i = 0; i < len; i++) {
