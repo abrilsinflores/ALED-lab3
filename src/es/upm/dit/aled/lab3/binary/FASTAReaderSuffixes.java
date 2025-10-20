@@ -122,6 +122,29 @@ public class FASTAReaderSuffixes extends FASTAReader { // tiene tous argumentos 
 				index = 0;
 			}
 		}
+		// como ya tenemos el primer CATANA, ahora recorremos el array de content linelamm
+		// primero quiero saber la posición del primer suffix.
+		int posSuffix = listOfConcurrences.get(0);
+		// recorro pa'bajo
+		for (int posNextSuffix = posSuffix + 1; posNextSuffix < this.suffixes.length; posNextSuffix++) {
+			index = 0;
+			while ((index < pattern.length) && (pattern[index] == this.content[posNextSuffix + index])) {
+				index++; // aumentamos el índice
+			}
+			if (index == pattern.length) {
+				listOfConcurrences.add(posNextSuffix);
+			}
+		}
+		// recorro pa'rriba
+		for (int posBeforeSuffix = posSuffix - 1; posBeforeSuffix > 0; posBeforeSuffix--) {
+			index = 0;
+			while ((index < pattern.length) && (pattern[index] == this.content[posBeforeSuffix + index])) {
+				index++; // aumentamos el índice
+			}
+			if (index == pattern.length) {
+				listOfConcurrences.add(posBeforeSuffix);
+			}
+		}
 
 		return listOfConcurrences;
 	}
