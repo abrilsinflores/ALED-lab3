@@ -85,12 +85,12 @@ public class FASTAReaderSuffixes extends FASTAReader { // tiene tous argumentos 
 		int lo = 0;
 		int hi = this.suffixes.length - 1; // mayor posicc (-1 xq si mide 8 tengo hasta la posicc 7!!!)
 		boolean found = false;
-		int index = 0; // rastrea el caracter actual con el pattern
+		int index = 0; // rastrea el caracter actual con el pattern // el FASTA file
 
 		while ((!found) && !(hi - lo <= 1)) {
 			int m = (int) Math.floor(lo + (hi - lo) / 2); // cálculo punto medio intervalo
 			int posSuffix = suffixes[m].suffixIndex; // posición del suffix ( q está en la posicc m del array the
-														// suffixs)en el FASTA file
+
 			// comparacc de cada carácter con el pattern mientras que:
 			// 1) el índice no supere el tamaño del patrón
 			// 2) los bytes del suffix q miremos no se salgan del archivo
@@ -104,8 +104,11 @@ public class FASTAReaderSuffixes extends FASTAReader { // tiene tous argumentos 
 			// coinciden el nm d bytes del suffix iguales al del pattern
 			// y si NO HAY MÁS LETRAS DETRÁS
 			if ((index == pattern.length) && (posSuffix + index == content.length)) {
+
 				listOfConcurrences.add(posSuffix);
+
 				found = true;
+
 			}
 			// si el suffix no coincide, MODIFICAMOS LÍMITES INTERVALOS
 			// si la letra del sufijo es MAYOR q la del pattern, CONCIDICIONES:
