@@ -151,6 +151,61 @@ public class FASTAReaderSuffixes extends FASTAReader { // tiene tous argumentos 
 
 		return listOfConcurrences;
 	}
+	
+	//ACTIVIDAD EXTRA -> implementar searchSNV
+	public List<Integer> searchSNV(byte[] pattern) {
+		List<Integer> listOfConcurrences = new ArrayList<Integer>();
+		int lo = 0;
+		int hi = this.suffixes.length - 1; 
+		boolean found = false;
+		int index = 0; 
+
+		while ((!found) && !(hi - lo <= 1)) {
+			int m = (int) Math.floor(lo + (hi - lo) / 2); 
+			int posSuffix = suffixes[m].suffixIndex; 
+
+			while ((index < pattern.length) && (posSuffix + index < content.length)
+					&& (pattern[index] == content[posSuffix + index])) {
+				index++; 
+			}
+			//pattern.length-1 porq permitimos un SNV
+			if ((index == pattern.length || index == pattern.length-1) && (posSuffix + index == content.length)) {
+
+				listOfConcurrences.add(posSuffix);
+
+				found = true;
+
+			}
+			else if ((index == pattern.length) || (pattern[index] < content[posSuffix + index])) {
+				hi = m--;
+				index = 0;
+			} else {
+				lo = m++;
+				index = 0;
+			}
+		}
+		int posSuffix = listOfConcurrences.get(0);
+		for (int posNextSuffix = posSuffix + 1; posNextSuffix < this.suffixes.length; posNextSuffix++) {
+			index = 0;
+			while ((index < pattern.length) && (pattern[index] == this.content[posNextSuffix + index])) {
+				index++;
+			}
+			if (index == pattern.length || index == pattern.length-1) {
+				listOfConcurrences.add(posNextSuffix);
+			}
+		}
+		for (int posBeforeSuffix = posSuffix - 1; posBeforeSuffix > 0; posBeforeSuffix--) {
+			index = 0;
+			while ((index < pattern.length) && (pattern[index] == this.content[posBeforeSuffix + index])) {
+				index++; 
+			}
+			if (index == pattern.length || index == pattern.length-1) {
+				listOfConcurrences.add(posBeforeSuffix);
+			}
+		}
+
+		return listOfConcurrences;
+	}
 
 	public static void main(String[] args) {
 		long t1 = System.nanoTime();
@@ -163,7 +218,7 @@ public class FASTAReaderSuffixes extends FASTAReader { // tiene tous argumentos 
 		System.out.println("Tiempo de ordenación: " + (System.nanoTime() - t2));
 		reader.printSuffixes();
 		long t3 = System.nanoTime();
-		List<Integer> posiciones = reader.search(patron);
+		List<Integer> posiciones = reader.searchSNV(patron);
 		System.out.println("Tiempo de búsqueda: " + (System.nanoTime() - t3));
 		if (posiciones.size() > 0) {
 			for (Integer pos : posiciones)
