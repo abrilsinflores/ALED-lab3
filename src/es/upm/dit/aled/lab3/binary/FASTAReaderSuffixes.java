@@ -83,100 +83,109 @@ public class FASTAReaderSuffixes extends FASTAReader { // tiene tous argumentos 
 		List<Integer> listOfConcurrences = new ArrayList<Integer>();
 		// límites de la búsqueda binaria
 		int lo = 0;
-		int hi = this.suffixes.length - 1; // mayor posicc (-1 xq si mide 8 tengo hasta la posicc 7!!!)
+		int hi = this.suffixes.length; // mayor posicc
 		boolean found = false;
 		int index = 0; // rastrea el caracter actual con el pattern // el FASTA file
+		int posSuffix;
+		int posInSuffixes = 0;
+		int m;
 
-		while ((!found) && !(hi - lo <= 1)) {
-			int m = (int) Math.floor(lo + (hi - lo) / 2); // cálculo punto medio intervalo
-			int posSuffix = suffixes[m].suffixIndex; // posición del suffix ( q está en la posicc m del array the
+		while ((!found) && ((hi - lo) > 1)) {
+			m = (int) Math.floor((lo + hi) / 2); // cálculo punto medio intervalo
+			posSuffix = suffixes[m].suffixIndex; // posición del suffix ( q está en la posicc m del array the
 
-			// comparacc de cada carácter con el pattern mientras que:
-			// 1) el índice no supere el tamaño del patrón
-			// 2) los bytes del suffix q miremos no se salgan del archivo
-			// 3) los bytes del suffix y el archivo coincidan
-			while ((index < pattern.length) && (posSuffix + index < content.length)
-					&& (pattern[index] == content[posSuffix + index])) {
-				index++; // aumentamos el índice
+			// If the pattern value at 'index' IS NOT THE LAST CHARACTER and matches with
+			// the one in the suffix, test the next one
+			if (pattern[index] == content[posSuffix + index]) {
+				index++;
 			}
 
-			// añadimos la posición del sufijo a la lista SOLAMENTE si
-			// coinciden el nm d bytes del suffix iguales al del pattern
-			// y si NO HAY MÁS LETRAS DETRÁS
-			if ((index == pattern.length) && (posSuffix + index == content.length)) {
-
+			// If the pattern value at 'index' IS THE LAST CHARACTER and matches with
+			// the one in the suffix, we have found a matching sequence
+			if (index == pattern.length && (pattern[index - 1] == content[posSuffix + index - 1])) {
 				listOfConcurrences.add(posSuffix);
-
 				found = true;
-
+				posInSuffixes = m;
 			}
-			// si el suffix no coincide, MODIFICAMOS LÍMITES INTERVALOS
-			// si la letra del sufijo es MAYOR q la del pattern, CONCIDICIONES:
-			// 1) q el índice sea igual d largo (xq entonces se ha encontrado un patrón pero
-			// DESPUÉS HAY MÁS LETRAS)
-			// OOOOO 2) q la sig letra del sufijo sea MAYOR q la del patrón
-			// OJO:can comparar letras porq es código ASCII, está ya ordenado alfabéticamm
-			// según Byte que es
-			else if ((index == pattern.length) || (pattern[index] < content[posSuffix + index])) {
+
+			// If the pattern value at 'index' comes before the one in the suffix...
+			else if (pattern[index] < content[posSuffix + index]) {
+				// ...take the left half of the suffix list
+				// and restart the index
 				hi = m--;
 				index = 0;
-			} else {
+			}
+			// If the pattern value at 'index' comes after the one in the suffix...
+			else if (pattern[index] > content[posSuffix + index]) {
+				// ...take the right half of the suffix list
+				// and restart the index
 				lo = m++;
 				index = 0;
 			}
 		}
-		// como ya tenemos el primer CATANA, ahora recorremos el array de content linelamm
-		// primero quiero saber la posición del primer suffix.
-		int posSuffix = listOfConcurrences.get(0);
-		// recorro pa'bajo
-		for (int posNextSuffix = posSuffix + 1; posNextSuffix < this.suffixes.length; posNextSuffix++) {
-			index = 0;
-			while ((index < pattern.length) && (pattern[index] == this.content[posNextSuffix + index])) {
-				index++; // aumentamos el índice
+		if (found) {
+			// Now we also check the previous indexes, in case there are more matches
+			int indexSubstract = 1;
+			while (true) {
+				posSuffix = suffixes[posInSuffixes - indexSubstract].suffixIndex;
+				boolean isAlsoMatch = true;
+				for (int s = 0; s < pattern.length; s++) {
+					if (pattern[s] != content[posSuffix + s]) {
+						isAlsoMatch = false;
+						break;
+					}
+				}
+				if (isAlsoMatch) {
+					listOfConcurrences.add(posSuffix);
+					indexSubstract++;
+				} else
+					break;
 			}
-			if (index == pattern.length) {
-				listOfConcurrences.add(posNextSuffix);
+			// Now we also check the next indexes, in case there are more matches
+			int indexAdd = 1;
+			while (true) {
+				posSuffix = suffixes[posInSuffixes + indexAdd].suffixIndex;
+				boolean isAlsoMatch = true;
+				for (int s = 0; s < pattern.length; s++) {
+					if (pattern[s] != content[posSuffix + s]) {
+						isAlsoMatch = false;
+						break;
+					}
+				}
+				if (isAlsoMatch) {
+					listOfConcurrences.add(posSuffix);
+					indexAdd++;
+				} else
+					break;
 			}
 		}
-		// recorro pa'rriba
-		for (int posBeforeSuffix = posSuffix - 1; posBeforeSuffix > 0; posBeforeSuffix--) {
-			index = 0;
-			while ((index < pattern.length) && (pattern[index] == this.content[posBeforeSuffix + index])) {
-				index++; // aumentamos el índice
-			}
-			if (index == pattern.length) {
-				listOfConcurrences.add(posBeforeSuffix);
-			}
-		}
-
 		return listOfConcurrences;
 	}
-	
-	//ACTIVIDAD EXTRA -> implementar searchSNV
+
+	// ACTIVIDAD EXTRA -> implementar searchSNV
 	public List<Integer> searchSNV(byte[] pattern) {
 		List<Integer> listOfConcurrences = new ArrayList<Integer>();
 		int lo = 0;
-		int hi = this.suffixes.length - 1; 
+		int hi = this.suffixes.length - 1;
 		boolean found = false;
-		int index = 0; 
+		int index = 0;
 
 		while ((!found) && !(hi - lo <= 1)) {
-			int m = (int) Math.floor(lo + (hi - lo) / 2); 
-			int posSuffix = suffixes[m].suffixIndex; 
+			int m = (int) Math.floor(lo + (hi - lo) / 2);
+			int posSuffix = suffixes[m].suffixIndex;
 
 			while ((index < pattern.length) && (posSuffix + index < content.length)
 					&& (pattern[index] == content[posSuffix + index])) {
-				index++; 
+				index++;
 			}
-			//pattern.length-1 porq permitimos un SNV
-			if ((index == pattern.length || index == pattern.length-1) && (posSuffix + index == content.length)) {
+			// pattern.length-1 porq permitimos un SNV
+			if ((index == pattern.length || index == pattern.length - 1) && (posSuffix + index == content.length)) {
 
 				listOfConcurrences.add(posSuffix);
 
 				found = true;
 
-			}
-			else if ((index == pattern.length) || (pattern[index] < content[posSuffix + index])) {
+			} else if ((index == pattern.length) || (pattern[index] < content[posSuffix + index])) {
 				hi = m--;
 				index = 0;
 			} else {
@@ -190,16 +199,16 @@ public class FASTAReaderSuffixes extends FASTAReader { // tiene tous argumentos 
 			while ((index < pattern.length) && (pattern[index] == this.content[posNextSuffix + index])) {
 				index++;
 			}
-			if (index == pattern.length || index == pattern.length-1) {
+			if (index == pattern.length || index == pattern.length - 1) {
 				listOfConcurrences.add(posNextSuffix);
 			}
 		}
 		for (int posBeforeSuffix = posSuffix - 1; posBeforeSuffix > 0; posBeforeSuffix--) {
 			index = 0;
 			while ((index < pattern.length) && (pattern[index] == this.content[posBeforeSuffix + index])) {
-				index++; 
+				index++;
 			}
-			if (index == pattern.length || index == pattern.length-1) {
+			if (index == pattern.length || index == pattern.length - 1) {
 				listOfConcurrences.add(posBeforeSuffix);
 			}
 		}
